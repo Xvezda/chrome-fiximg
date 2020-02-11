@@ -18,6 +18,7 @@
     "permissions": [
       "webRequestBlocking",
       "webRequest",
+      "tabs",
       "*://*/*"
     ]
   }

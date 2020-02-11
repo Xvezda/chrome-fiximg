@@ -23,6 +23,11 @@ function captureDetails(details) {
 }
 
 
+function checkErrorCode(code) {
+  return [400, 403, 404, 500, 502, 503, 504].some(x => code === x);
+}
+
+
 function checkExceeded(value) {
   if (value >= MAX_RETRIES || value >= TOTAL_STRATEGIES) {
     return true;
@@ -52,6 +57,18 @@ function removeCache(id) {
   delete errorImages[id];
   delete retryCounter[id];
 }
+
+
+setTimeout(function() {
+  var garbageCollector = setInterval(function() {
+    console.log('collecting garbage...');
+
+    previousDetails = {};
+    originalUrl = {};
+    errorImages = {};
+    retryCounter = {};
+  }, 300 * 1000);
+}, 300 * 1000);
 
 
 chrome.webRequest.onBeforeSendHeaders.addListener(details => {
@@ -131,8 +148,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(details => {
 
 chrome.webRequest.onHeadersReceived.addListener(details => {
   if (details.type !== 'image') return;
-  if (details.statusCode === 200 ||
-      details.statusCode === 301 || details.statusCode === 302) return;
+  if (!checkErrorCode(details.statusCode)) return;
   console.log('onHeadersReceived:', details);
 
   // Temporarily store reponse details
@@ -164,7 +180,7 @@ chrome.webRequest.onHeadersReceived.addListener(details => {
 
 chrome.webRequest.onCompleted.addListener(details => {
   if (!Object.keys(originalUrl).includes(details.requestId)) return;
-  if (details.statusCode !== 200) return;
+  if (checkErrorCode(details.statusCode)) return;
 
   console.log(`purge cache -> id: ${details.requestId}`);
   // Clear caches
@@ -172,3 +188,26 @@ chrome.webRequest.onCompleted.addListener(details => {
 }, {
   urls: ["*://*/*"]
 }, ['responseHeaders']);
+
+
+chrome.webRequest.onErrorOccurred.addListener(details => {
+  // Replace blocked image with proxy
+  if (details.error === 'net::ERR_CONNECTION_RESET') {
+    let code = `
+      (function() {
+        let proxyUrl = "https://images2-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&gadget=a&no_expand=1&resize_h=0&rewriteMime=image%2F*&url=";
+        let targetSrc = "${encodeURIComponent(details.url)}";
+        let images = document.querySelectorAll("img");
+        for (let i = 0; i < images.length; ++i) {
+          if (encodeURIComponent(images[i].src) === targetSrc) {
+            images[i].src = proxyUrl + targetSrc;
+            break;
+          }
+        }
+      })();
+    `;
+    chrome.tabs.executeScript(details.tabId, { code: code }, result => {});
+  }
+}, {
+  urls: ["*://*/*"]
+});
