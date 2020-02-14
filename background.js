@@ -210,7 +210,8 @@ chrome.webRequest.onBeforeSendHeaders.addListener(details => {
 
         // Extract root domain
         const rootDomain = getRootDomain(hostname);
-        const newReferer = `${url.protocol}//${rootDomain}`;
+        const newReferer = `${url.protocol}//${rootDomain}` +
+          (url.port ? `:${url.port}` : '');
 
         for (let i = 0; i < details.requestHeaders.length; ++i) {
           if (details.requestHeaders[i].name.toLowerCase() === 'referer') {
