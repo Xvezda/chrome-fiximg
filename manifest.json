@@ -10,7 +10,7 @@
       "persistent": true
     },
     "browser_action": {
-      "default_popup": "popup.html"
+      "default_popup": "popup/popup.html"
     },
     "icons": {
       "16": "icons/icons8-gallery-16.png",

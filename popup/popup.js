@@ -54,7 +54,7 @@ document.querySelectorAll('[data-i18n]').forEach(item => {
 
 
 // Load data from manifest
-fetch('./manifest.json').then(response => {
+fetch('/manifest.json').then(response => {
   return response.json();
 }).then(manifest => {
   document.querySelectorAll('[data-man]').forEach(item => {
@@ -71,10 +71,10 @@ fetch('./manifest.json').then(response => {
 
       switch (root) {
         case 'manifest':
-          item[key] = manifest[value.pop()];
+          item.setAttribute(key, manifest[value.pop()]);
           break;
         default:
-          item[key] = chrome.i18n.getMessage(value.pop());
+          item.setAttribute(key, chrome.i18n.getMessage(value.pop()));
           break;
       }
     });
