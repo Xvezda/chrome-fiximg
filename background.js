@@ -11,7 +11,7 @@ function next(name) {
 
 const LOG_NONE = 0;
 const LOG_DEBUG = next(LOG_NONE);
-let logState = LOG_DEBUG;
+let logState = LOG_NONE;
 
 if (logState === LOG_NONE) {
   console.log = () => {};
