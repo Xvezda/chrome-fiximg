@@ -26,7 +26,7 @@ const options = [
 ];
 
 let projectName = manifest['name'];
-let totalStrategies = 3;
+let totalStrategies = 4;
 let garbageCollectorInterval = 5;
 let maxRetries = 3;
 let useProxy = true;
@@ -38,6 +38,17 @@ let previousDetails = {};
 
 let errorImages = {};
 let retryCounter = {};
+
+// Load public suffixes
+let publicSuffixes = [];
+fetch('/datas/public_suffix_list.dat').then(response => {
+  return response.text();
+}).then(text => {
+  publicSuffixes = text
+    .split('\n')
+    .filter(suffix => suffix && !suffix.startsWith('//'));
+  console.log('suffixes loaded:', publicSuffixes);
+});
 
 
 function captureDetails(details) {
@@ -55,6 +66,19 @@ function checkExceeded(value) {
     return true;
   }
   return false;
+}
+
+
+function getRootDomain(hostname) {
+  let tokens = hostname.split('.').reverse();
+  let i = tokens.length;
+  let rootDomain = '';
+  do {
+    rootDomain = tokens[tokens.length - i] + (rootDomain ? '.' + rootDomain : '');
+    if (!publicSuffixes.includes(rootDomain)) break;
+  } while (i--);
+  if (!i) return hostname;
+  return rootDomain;
 }
 
 
@@ -180,7 +204,32 @@ chrome.webRequest.onBeforeSendHeaders.addListener(details => {
 
         break;
       }
-      case 1: {  // Second strategy: Request without referer
+      case 1: {  // Second strategy: Root referer
+        // Get hostname from url
+        const hostname = url.hostname;
+
+        // Extract root domain
+        const rootDomain = getRootDomain(hostname);
+        const newReferer = `${url.protocol}//${rootDomain}`;
+
+        for (let i = 0; i < details.requestHeaders.length; ++i) {
+          if (details.requestHeaders[i].name.toLowerCase() === 'referer') {
+            details.requestHeaders[i].value = newReferer;
+            captureDetails(details);
+
+            return { requestHeaders: details.requestHeaders };
+          }
+        }
+        // If referer not exists
+        // Make one
+        details.requestHeaders.push({ name: 'Referer', value: newReferer });
+        captureDetails(details);
+
+        return { requestHeaders: details.requestHeaders };
+
+        break;
+      }
+      case 2: {  // Third strategy: Request without referer
         for (let i = 0; i < details.requestHeaders.length; ++i) {
           if (details.requestHeaders[i].name.toLowerCase() === 'referer') {
             details.requestHeaders.splice(i, 1);
@@ -189,8 +238,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(details => {
         return { requestHeaders: details.requestHeaders };
         break;
       }
-      default: {  // Last strategy: Change protocol
-        break;
+      case 3: {  // Fourth strategy: Change protocol
         const protocol = url.protocol.slice(0, -1);
         let convProto = 'https';
         if (protocol === 'https') {
@@ -219,6 +267,14 @@ chrome.webRequest.onBeforeSendHeaders.addListener(details => {
           redirectUrl: redirectUrl,
           requestHeaders: details.requestHeaders,
         };
+        break;
+      }
+      default: {  // Always exit if out of strategies
+        removeCache(details.requestId);
+        // Cancel when max-retries exceeded
+        return {
+          cancel: true,
+        }
         break;
       }
     }
