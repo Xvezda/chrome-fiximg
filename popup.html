@@ -8,28 +8,35 @@
   </head>
   <body>
     <div class="header">
-      <h1 class="brand default-cursor">FixImg<img src="/icons/hammer.png" width="26px" height="26px"></h1>
+      <h1 class="brand default-cursor"><span data-man="name"></span><img src="/icons/hammer.png" width="26px" height="26px"></h1>
       <div class="info right-align">
-        <small class="block">Xvezda</small>
-        <small class="block mute">Version 1.0.0</small>
+        <a href="javascript:void 0" target="_blank" class="nostyle" data-bind='{ "href": "manifest.homepage_url" }'><small class="block" data-man="author"></small></a>
+        <small class="block mute"><span data-i18n="@@ui_locale"></span> version <span data-man="version"></span></small>
       </div>
     </div>
     <div class="container">
-      <h2 class="title">Options</h2>
-      <div class="table options">
+      <h2 class="title" data-i18n="options"></h2>
+      <div id="options" class="table options">
         <div class="table-row">
-          <div class="table-cell default-cursor">Retry limiter</div>
+          <div class="table-cell default-cursor" data-i18n="retry_limit"></div>
           <div class="table-cell">
-            <input class="input-ctrl" type="number" value="1">
+            <input class="input-ctrl" type="number" name="retry_limit" value="1" min="1" max="10">
           </div>
         </div>
         <div class="table-row">
-          <div class="table-cell default-cursor">Use proxy for blocked image</div>
+          <div class="table-cell default-cursor" data-i18n="gcinterval"></div>
           <div class="table-cell">
-            <input class="" type="checkbox">
+            <input class="input-ctrl" type="number" name="gcinterval" value="5" min="5" max="60" step="5"> min.
+          </div>
+        </div>
+        <div class="table-row">
+          <div class="table-cell default-cursor" data-i18n="use_proxy"></div>
+          <div class="table-cell">
+            <input name="use_proxy" type="checkbox" checked>
           </div>
         </div>
       </div>
     </div>
+    <script src="popup.js"></script>
   </body>
 </html>

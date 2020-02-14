@@ -53,6 +53,11 @@ body {
     color: var(--default-color);
 }
 
+.nostyle {
+    color: inherit;
+    text-decoration: inherit;
+}
+
 .block {
     display: block;
 }
@@ -112,7 +117,7 @@ body {
 
 .input-ctrl {
     display: inline;
-    width: 100%;
+    max-width: 100%;
     margin: 0;
     padding: var(--input-padding);
     font-size: var(--input-font-size);

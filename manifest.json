@@ -1,9 +1,10 @@
   {
-    "name": "fiximg",
+    "name": "FixImg",
     "author": "Xvezda <xvezda@naver.com>",
     "homepage_url": "https://github.com/Xvezda/chrome-fiximg",
-    "description" : "Let me fix your broken image!",
+    "description" : "__MSG_description__",
     "version": "1.0.0",
+    "default_locale": "en",
     "background": {
       "scripts": ["background.js"],
       "persistent": true
@@ -21,6 +22,7 @@
     "permissions": [
       "webRequestBlocking",
       "webRequest",
+      "storage",
       "tabs",
       "*://*/*"
     ]

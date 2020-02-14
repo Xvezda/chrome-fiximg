@@ -5,9 +5,31 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
+function next(name) {
+  return name + 1;
+}
 
-const TOTAL_STRATEGIES = 3;
-const MAX_RETRIES = 3;
+const LOG_NONE = 0;
+const LOG_DEBUG = next(LOG_NONE);
+let logState = LOG_DEBUG;
+
+if (logState === LOG_NONE) {
+  console.log = () => {};
+}
+
+
+const manifest = chrome.runtime.getManifest();
+const options = [
+  'retry_limit',
+  'gcinterval',
+  'use_proxy',
+];
+
+let projectName = manifest['name'];
+let totalStrategies = 3;
+let garbageCollectorInterval = 5;
+let maxRetries = 3;
+let useProxy = true;
 
 // Original image url
 let originalUrl = {};
@@ -29,7 +51,7 @@ function checkErrorCode(code) {
 
 
 function checkExceeded(value) {
-  if (value >= MAX_RETRIES || value >= TOTAL_STRATEGIES) {
+  if (value >= maxRetries || value >= totalStrategies) {
     return true;
   }
   return false;
@@ -58,17 +80,77 @@ function removeCache(id) {
   delete retryCounter[id];
 }
 
+function collectGarbage() {
+  console.log('collecting garbage...');
 
-setTimeout(function() {
-  var garbageCollector = setInterval(function() {
-    console.log('collecting garbage...');
+  previousDetails = {};
+  originalUrl = {};
+  errorImages = {};
+  retryCounter = {};
+}
 
-    previousDetails = {};
-    originalUrl = {};
-    errorImages = {};
-    retryCounter = {};
-  }, 300 * 1000);
-}, 300 * 1000);
+function createCollector() {
+  console.log(`new gc created! - interval: ${garbageCollectorInterval}`);
+
+  return setInterval(collectGarbage,
+    garbageCollectorInterval * 60 /* s */ * 1000 /* ms */);
+}
+
+var garbageCollector = createCollector();
+
+
+function messageHandler(message, sender, sendResponse) {
+  console.log(message, sender, sendResponse);
+  if (!message) return;
+  switch (message.type) {
+    case 'option_updated':
+      chrome.storage.local.set({ [message.name]: message.data }, () => {
+        updateOption(message.name, message.data);
+      });
+      break;
+    default:
+      break;
+  }
+}
+
+chrome.runtime.onMessage.addListener(messageHandler);
+
+
+function updateOption(name, value) {
+  switch (name) {
+    case 'retry_limit':
+      maxRetries = parseInt(value || maxRetries);
+      break;
+    case 'use_proxy':
+      useProxy = typeof value === 'undefined' ? true : value;
+      break;
+    case 'gcinterval':
+      garbageCollectorInterval = parseInt(value || garbageCollectorInterval);
+
+      // Re-generate gc
+      clearInterval(garbageCollector);
+      garbageCollector = createCollector();
+
+      break;
+    default:
+      break;
+  }
+}
+
+
+function loadOptions() {
+  chrome.storage.local.get(options, result => {
+    options.forEach(function(option) {
+      updateOption(option, result[option]);
+    });
+    console.log('storage:', result);
+  });
+}
+
+function initialize() {
+  loadOptions();
+}
+initialize();
 
 
 chrome.webRequest.onBeforeSendHeaders.addListener(details => {
@@ -193,6 +275,7 @@ chrome.webRequest.onCompleted.addListener(details => {
 chrome.webRequest.onErrorOccurred.addListener(details => {
   // Replace blocked image with proxy
   if (details.error === 'net::ERR_CONNECTION_RESET') {
+    if (!useProxy) return;
     let code = `
       (function() {
         let proxyUrl = "https://images2-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&gadget=a&no_expand=1&resize_h=0&rewriteMime=image%2F*&url=";
