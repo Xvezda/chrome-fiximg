@@ -1,7 +1,7 @@
 # FixImg
 
 ![License](https://img.shields.io/github/license/Xvezda/chrome-fiximg)
-![Whale store](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.xvezda.com%2Fv1%2Fwhale-store%2Fv%2Fccamieeifalippbcdjfokaamepjpjcdo)
+[![Whale store](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.xvezda.com%2Fv1%2Fwhale-store%2Fv%2Fccamieeifalippbcdjfokaamepjpjcdo)](https://store.whale.naver.com/detail/ccamieeifalippbcdjfokaamepjpjcdo)
 
 [\[english\]](../README.md)
 [한국어]
