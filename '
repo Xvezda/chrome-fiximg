@@ -83,14 +83,14 @@ fetch('/manifest.json').then(response => {
 });
 
 
-function handleToggle({ tokens = [], context = {source: undefined} }) {
+function handleToggle({ tokens, context = {source: undefined} }) {
   /**
-   * toggle command syntax:
-   *     toggle <target> value
-   * args:
-   *     target - selector or predefined constant (starts with `@`) (default: this)
+   * toggle command:
+   *     toggle <target> <class|id> value
    */
   const target_ = tokens.shift();
+  const type_ = tokens.shift();
+
   let target;
 
   switch (target_.slice(0, 1)) {
@@ -116,8 +116,13 @@ function handleToggle({ tokens = [], context = {source: undefined} }) {
   // Fallback to this
   target = target || this;
 
-  while (tokens.length) {
-    target.classList.toggle(tokens.shift());
+  switch (type_) {
+    case 'class':
+      break;
+    case 'id':
+      break;
+    default:
+      break;
   }
 }
 
