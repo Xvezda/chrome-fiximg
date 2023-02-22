@@ -23,7 +23,6 @@
       "webRequest",
       "webRequestBlocking",
       "storage",
-      "tabs",
       "*://*/*"
     ]
   }
